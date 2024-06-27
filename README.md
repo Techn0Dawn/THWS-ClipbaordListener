@@ -1,6 +1,6 @@
 # How to work with this Repository
 ##### Add an virtual environment for python if not already done
-```python -m venv clipboard-listener-env```
+```python -m venv clipboardListener-env```
 ##### Activate the venv
 On Windows, run:
 
