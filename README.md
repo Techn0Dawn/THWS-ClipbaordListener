@@ -4,10 +4,10 @@
 ##### Activate the venv
 On Windows, run:
 
-```tutorial-env\Scripts\activate```
+```clipboardListener\Scripts\activate```
 On Unix or MacOS, run:
 
-```source clipboard-listener/bin/activate```
+```source clipboardListener/bin/activate```
 
 ## install needed packages
 ``` python -m pip install -r requirements.txt ```
