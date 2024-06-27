@@ -1,13 +1,13 @@
 # How to work with this Repository
 ##### Add an virtual environment for python if not already done
-```python -m venv tutorial-env```
+```python -m venv clipboard-listener-env```
 ##### Activate the venv
 On Windows, run:
 
 ```tutorial-env\Scripts\activate```
 On Unix or MacOS, run:
 
-```source tutorial-env/bin/activate```
+```source clipboard-listener/bin/activate```
 
 ## install needed packages
 ``` python -m pip install -r requirements.txt ```
