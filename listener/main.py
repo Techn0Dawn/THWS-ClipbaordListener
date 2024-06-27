@@ -3,18 +3,19 @@ import threading
 import platform
 import windows
 
+log_file = 'clipboard_log.txt'
+previous_content = None
 
 def main():
-    log_file = 'clipboard_log.txt'
     print("Starting")
-    if platform.system() == 'Windows':    
+    if platform.system() == 'Windows':
         print("Monitoring clipboard. Press CTRL+C to stop.")
-        clipboard_thread = threading.Thread(target=windows.monitor_clipboard, args=(log_file,), daemon=True)
+        clipboard_thread = threading.Thread(target=windows.monitor_clipboard, daemon=True)
         clipboard_thread.start()
     else:
         print("Error: This script only supports Windows.")
-        return       
-    
+        return
+
     try:
         while True:
             time.sleep(10)

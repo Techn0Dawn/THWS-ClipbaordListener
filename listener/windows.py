@@ -1,7 +1,37 @@
 import win32clipboard
 import win32con
-import time
 import utility
+import win32gui, win32api
+import ctypes
+import main
+from pathlib import Path
+
+previous_content = None
+
+# To Listen to a Windows Signal we need to have some kind of window that can hook into it. Somehow :D. I read this kind of things on a Blog and some Stackoverflow discussions. Have to dig deeper into it.
+def create_window():
+    wc = win32gui.WNDCLASS()
+    wc.lpfnWndProc = wnd_proc
+    wc.lpszClassName = "ClipboardMonitorWindow"
+    wc.hInstance = win32api.GetModuleHandle(None)
+    class_atom = win32gui.RegisterClass(wc)
+    hwnd = win32gui.CreateWindow(class_atom, "ClipboardMonitorWindow", 0, 0, 0, 0, 0, 0, 0, wc.hInstance, None)
+    ctypes.windll.user32.AddClipboardFormatListener(hwnd)
+    return hwnd
+
+def wnd_proc(hwnd, msg, wparam, lparam):
+    if msg == 0x031D:  # WM_CLIPBOARDUPDATE
+        process_clipboard()
+    return 0
+
+def process_clipboard():
+    global previous_content
+    current_content = get_clipboard_content()
+    if current_content and current_content != previous_content:
+        print("Detected new clipboard content, logging.")
+        print(current_content)
+        utility.log_clipboard_content(current_content, main.log_file)
+        previous_content = current_content
 
 def get_clipboard_content():
     content = None
@@ -16,12 +46,9 @@ def get_clipboard_content():
         win32clipboard.CloseClipboard()
     return content
 
-def monitor_clipboard(log_file):
-    previous_content = None
+def monitor_clipboard():
+    hwnd = create_window()
     while True:
-        current_content = get_clipboard_content()
-        if current_content and current_content != previous_content:
-            print("Detected new clipboard content, logging.")
-            utility.log_clipboard_content(current_content, log_file)
-            previous_content = current_content
-        time.sleep(1)
+        win32gui.PumpWaitingMessages()
+
+
