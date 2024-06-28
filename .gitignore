@@ -166,3 +166,4 @@ cython_debug/
 /clipboard_log.txt
 /webserver/backend/node_modules
 /webserver/backend/data.db
+/temp_screenshot.png
