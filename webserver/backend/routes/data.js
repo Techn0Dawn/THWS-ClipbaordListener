@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
 const config = require('../config.js');
+const multer  = require('multer');
 
 const db = new sqlite3.Database(config.database.dataPath);
 
@@ -9,22 +10,27 @@ db.serialize(() => {
   db.run("CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, hostname TEXT, timestamp TEXT, content TEXT, img TEXT)");
 });
 
-router.post('/', (req, res) => {
-  const values = req.body;
-  console.log(values)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-  const stmt = db.prepare("INSERT INTO data (username, hostname, timestamp, content) VALUES (?, ?, ?, ?)");
+router.post('/',upload.single('screenshot'), (req, res) => {
+  const values = req.body;
+  console.log(values);
+//  const img = req.file.buffer;
+//  console.log(img);
+
+  const stmt = db.prepare("INSERT INTO data (username, hostname, timestamp, content, img) VALUES (?, ?, ?, ?, ?)");
 
   db.serialize(() => {
     const errors = [];
-      const { username, hostname, timestamp, content } = values;
+      const { username, hostname, timestamp, content, img } = values;
 
       if (!content) {
         errors.push('Content is required for value: ' + JSON.stringify(value));
         return;
       }
 
-      stmt.run(username, hostname, timestamp, content, function(err) {
+      stmt.run(username, hostname, timestamp, content, img, function(err) {
         if (err) {
           errors.push(err.message);
         }

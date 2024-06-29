@@ -6,12 +6,9 @@ def send(img, body):
     files = {
         'screenshot': ('screenshot.png', img, 'image/png')
     }
-    headers = {
-        'Content-Type': 'application/json'
-    }
 
     #print(files)
-    response = requests.post(url, json=body, headers=headers)
+    response = requests.post(url, data=body, files=files)
     if response.status_code == 200:
         print('Data uploaded successfully.')
     else:
