@@ -7,11 +7,11 @@ def send(img, body):
         'screenshot': ('screenshot.png', img, 'image/png')
     }
     headers = {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'application/json'
     }
 
     #print(files)
-    response = requests.post(url, data=body, files=files, headers=headers)
+    response = requests.post(url, json=body, headers=headers)
     if response.status_code == 200:
         print('Data uploaded successfully.')
     else:

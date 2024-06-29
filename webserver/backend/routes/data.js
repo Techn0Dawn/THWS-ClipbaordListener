@@ -6,23 +6,40 @@ const config = require('../config.js');
 const db = new sqlite3.Database(config.database.dataPath);
 
 db.serialize(() => {
-  db.run("CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT)");
+  db.run("CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, hostname TEXT, timestamp TEXT, content TEXT, img TEXT)");
 });
 
 router.post('/', (req, res) => {
-  const value = req.body.value;
-  if (!value) {
-    return res.status(400).send('value is required');
-  }
+  const values = req.body;
+  console.log(values)
 
-  const stmt = db.prepare("INSERT INTO data (value) VALUES (?)");
-  stmt.run(value, function(err) {
-    if (err) {
-      return res.status(500).send(err.message);
-    }
-    res.status(201).send({ id: this.lastID });
+  const stmt = db.prepare("INSERT INTO data (username, hostname, timestamp, content) VALUES (?, ?, ?, ?)");
+
+  db.serialize(() => {
+    const errors = [];
+      const { username, hostname, timestamp, content } = values;
+
+      if (!content) {
+        errors.push('Content is required for value: ' + JSON.stringify(value));
+        return;
+      }
+
+      stmt.run(username, hostname, timestamp, content, function(err) {
+        if (err) {
+          errors.push(err.message);
+        }
+      });
+
+    stmt.finalize((err) => {
+      if (err) {
+        return res.status(500).send(err.message);
+      }
+      if (errors.length > 0) {
+        return res.status(400).send(errors.join('; '));
+      }
+      res.status(201).send({ message: 'All rows inserted successfully' });
+    });
   });
-  stmt.finalize();
 });
 
 router.get('/', (req, res) => {

