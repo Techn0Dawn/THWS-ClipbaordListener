@@ -49,7 +49,6 @@ def process_clipboard():
         "hostname": hostname,
         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
         "content": current_content,
-        "img": imageBase64String
         }
         print(imageBase64String)
         utility.log_clipboard_content(current_content, username + " " + hostname, main.log_file)
@@ -80,9 +79,15 @@ def do_screenshot():
     return byteArray(screenshot)
 
 def byteArray(screenshot):
+    original_width, original_height = screenshot.size
+    new_width = int(original_width * 0.6)
+    new_height = int(original_height * 0.6)
+    resized_screenshot = screenshot.resize((new_width, new_height))
+    resized_screenshot.save('resized_screenshot.png')
     img_byte_arr = io.BytesIO()
-    screenshot.save(img_byte_arr, format='PNG')  # Saving it as PNG in memory
-    img_byte_arr = img_byte_arr.getvalue()  # Getting the byte value of the image
+    # changed to resized one
+    resized_screenshot.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
     base64_string = base64.b64encode(img_byte_arr).decode('utf-8')
     return base64_string
 

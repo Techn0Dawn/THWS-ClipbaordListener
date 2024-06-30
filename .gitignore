@@ -167,3 +167,5 @@ cython_debug/
 /webserver/backend/node_modules
 /webserver/backend/data.db
 /temp_screenshot.png
+/resized_screenshot.png
+uploads/
