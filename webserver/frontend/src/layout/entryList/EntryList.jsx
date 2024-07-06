@@ -33,6 +33,30 @@ export default function EntryList({ data }) {
       });
   };
 
+  const downloadFiles = (files) => {
+    files.map((file) =>
+      axios
+        .get(`${backendUrl}/data/file/${file.filename}`, {
+          responseType: "arraybuffer",
+        })
+        .then((response) => {
+          const blob = new Blob([response.data], { type: `${file.mime_type}` });
+          const fileUrl = URL.createObjectURL(blob);
+          // Create an anchor element in memory
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = fileUrl;
+          a.download = file.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        })
+        .catch((error) => {
+          console.error("Error fetching image:", error);
+        })
+    );
+  };
+
   return (
     <Segment>
       <Item.Group divided>
@@ -44,12 +68,14 @@ export default function EntryList({ data }) {
               </Item.Header>
               <Item.Meta>{entry.timestamp}</Item.Meta>
               <Item.Description>
-                <div>
-                  Captured Content:{" "}
-                  <b style={{ color: "red", fontSize: "20px" }}>
-                    {entry.content}
-                  </b>
-                </div>
+                {entry.actiontype === "text" && (
+                  <div>
+                    Captured Content:{" "}
+                    <b style={{ color: "red", fontSize: "20px" }}>
+                      {entry.content}
+                    </b>
+                  </div>
+                )}
               </Item.Description>
               {entry.actiontype === "text" && (
                 <Item.Extra>
@@ -66,7 +92,6 @@ export default function EntryList({ data }) {
                         Load
                       </Button>
                     </div>
-                    {console.log(imageData[entry.id])}
                     {imageData[entry.id] && (
                       <Image
                         src={imageData[entry.id]}
@@ -79,6 +104,22 @@ export default function EntryList({ data }) {
                   </div>
                 </Item.Extra>
               )}
+              {entry.actiontype === "files" && (
+                <Item.Extra>
+                  <div>Type: {entry.actiontype}</div>
+                  <div>
+                    {entry.files.map((file) => (
+                      <div key={file.id}>{file.filename}</div>
+                    ))}
+                  </div>
+                  <Button onClick={() => downloadFiles(entry.files)}>
+                    Download
+                  </Button>
+                </Item.Extra>
+              )}
+              <Button>
+                Delete
+              </Button>
             </Item.Content>
           </Item>
         ))}
