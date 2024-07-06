@@ -19,9 +19,18 @@ export default function EntryList({ data }) {
   const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_API;
 
   const getImage = (filename, entryId) => {
-    axios.get(backendUrl + `/data/file/${filename}`).then((response) => {
-      setImageData({ ...imageData, [entryId]: response.data });
-    });
+    axios
+      .get(`${backendUrl}/data/file/${filename}`, {
+        responseType: "arraybuffer",
+      })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: "image/png" });
+        const imageUrl = URL.createObjectURL(blob);
+        setImageData({ ...imageData, [entryId]: imageUrl });
+      })
+      .catch((error) => {
+        console.error("Error fetching image:", error);
+      });
   };
 
   return (
@@ -46,13 +55,19 @@ export default function EntryList({ data }) {
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <div style={{ flex: 1 }}>
                     <div>{entry.filename}</div>
-                    <Button onClick={() => getImage(entry.filename, entry.id)}>
+                    {console.log(entry)}
+                    <Button
+                      onClick={() =>
+                        getImage(entry.files[0].filename, entry.id)
+                      }
+                    >
                       Load
                     </Button>
                   </div>
+                  {console.log(imageData[entry.id])}
                   {imageData[entry.id] && (
                     <Image
-                      src={`data:image/png;base64,${imageData[entry.id]}`}
+                      src={imageData[entry.id]}
                       alt="Captured Screen"
                       size="medium"
                       onClick={() => handleOpenModal(imageData[entry.id])}
@@ -74,7 +89,7 @@ export default function EntryList({ data }) {
       >
         <Modal.Content style={{ textAlign: "center" }}>
           <Image
-            src={`data:image/png;base64,${selectedImage}`}
+            src={selectedImage}
             alt="Captured Screen"
             size="massive"
             centered
