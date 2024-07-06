@@ -51,31 +51,34 @@ export default function EntryList({ data }) {
                   </b>
                 </div>
               </Item.Description>
-              <Item.Extra>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <div style={{ flex: 1 }}>
-                    <div>{entry.filename}</div>
-                    {console.log(entry)}
-                    <Button
-                      onClick={() =>
-                        getImage(entry.files[0].filename, entry.id)
-                      }
-                    >
-                      Load
-                    </Button>
+              {entry.actiontype === "text" && (
+                <Item.Extra>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <div>{entry.files[0].filename}</div>
+                      <div>Type: {entry.actiontype}</div>
+                      {console.log(entry)}
+                      <Button
+                        onClick={() =>
+                          getImage(entry.files[0].filename, entry.id)
+                        }
+                      >
+                        Load
+                      </Button>
+                    </div>
+                    {console.log(imageData[entry.id])}
+                    {imageData[entry.id] && (
+                      <Image
+                        src={imageData[entry.id]}
+                        alt="Captured Screen"
+                        size="medium"
+                        onClick={() => handleOpenModal(imageData[entry.id])}
+                        style={{ cursor: "pointer" }}
+                      />
+                    )}
                   </div>
-                  {console.log(imageData[entry.id])}
-                  {imageData[entry.id] && (
-                    <Image
-                      src={imageData[entry.id]}
-                      alt="Captured Screen"
-                      size="medium"
-                      onClick={() => handleOpenModal(imageData[entry.id])}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )}
-                </div>
-              </Item.Extra>
+                </Item.Extra>
+              )}
             </Item.Content>
           </Item>
         ))}
