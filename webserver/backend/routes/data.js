@@ -64,10 +64,37 @@ router.post('/', upload.any(), (req, res) => {
         });
       
         fileSavePromises.push(fileSavePromise);
+        
     }
 
     else {
       console.log("no text uploaded");
+      console.log(file)
+        const filename = file.originalname;
+        const formattedTimestamp = timestamp.replace(/[-: ]/g, '');
+        const storingName = `${formattedTimestamp}_${filename}`;
+        const mimeType = file.mimetype;
+        const buffer = file.buffer;
+        const filePath = path.join(__dirname, '../uploads', storingName);
+        fs.writeFileSync(filePath, buffer);
+        
+        const fileSavePromise = new Promise((resolve, reject) => {
+          db.run(
+            `INSERT INTO data (action_id, filename, mime_type) VALUES (?, ?, ?)`,
+            [actionId, storingName, mimeType],
+            function(err) {
+              if (err) {
+                console.error('Error inserting into files table', err);
+                reject(err);
+              } else {
+                resolve();
+              }
+            }
+          );
+        });
+      
+        fileSavePromises.push(fileSavePromise);
+
     }});
 
       Promise.all(fileSavePromises)
