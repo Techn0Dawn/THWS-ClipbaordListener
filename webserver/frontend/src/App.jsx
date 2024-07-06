@@ -13,7 +13,7 @@ function App() {
     });
   }, []);
 
-  return <EntryList data={data} />;
+  return <EntryList data={data} setData={setData} />;
 }
 
 export default App;

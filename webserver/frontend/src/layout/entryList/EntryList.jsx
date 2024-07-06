@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Button, Image, Item, Modal, Segment } from "semantic-ui-react";
 
-export default function EntryList({ data }) {
+export default function EntryList({ data, setData }) {
   const [open, setOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [imageData, setImageData] = useState({});
@@ -42,7 +42,7 @@ export default function EntryList({ data }) {
         .then((response) => {
           const blob = new Blob([response.data], { type: `${file.mime_type}` });
           const fileUrl = URL.createObjectURL(blob);
-          // Create an anchor element in memory
+          // Create an anchor element in memory for activating a download. No styling for hiding. After execution its being removed.
           const a = document.createElement("a");
           a.style.display = "none";
           a.href = fileUrl;
@@ -55,6 +55,14 @@ export default function EntryList({ data }) {
           console.error("Error fetching image:", error);
         })
     );
+  };
+
+  const deleteFiles = (entryId) => {
+    axios.delete(`${backendUrl}/data//${entryId}`).then((response) => {
+      console.log(response.data);
+    });
+    const newData = data.filter((entry) => entry.id !== entryId);
+    setData(newData);
   };
 
   return (
@@ -117,9 +125,7 @@ export default function EntryList({ data }) {
                   </Button>
                 </Item.Extra>
               )}
-              <Button>
-                Delete
-              </Button>
+              <Button onClick={() => deleteFiles(entry.id)}>Delete</Button>
             </Item.Content>
           </Item>
         ))}
